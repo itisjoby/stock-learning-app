@@ -136,14 +136,15 @@ export function generatePayoffData(S, K, premium, type, numContracts = 1) {
 }
 
 /**
- * Get option expiry dates (30, 60, 90 days from now)
+ * Get option expiry dates relative to a reference date
+ * @param {Date|string} refDate - Reference date (defaults to now)
  */
-export function getExpiryDates() {
+export function getExpiryDates(refDate = new Date()) {
   const dates = []
-  const now = new Date()
+  const base = new Date(refDate)
   
   ;[30, 60, 90].forEach(days => {
-    const d = new Date(now)
+    const d = new Date(base)
     d.setDate(d.getDate() + days)
     // Move to next Friday if not already
     while (d.getDay() !== 5) d.setDate(d.getDate() + 1)
@@ -156,13 +157,16 @@ export function getExpiryDates() {
 /**
  * Generate options chain for a stock
  */
-export function generateOptionsChain(S, iv, expiryDates, r = 0.05) {
+export function generateOptionsChain(S, iv, expiryDates, r = 0.05, currentDate = new Date()) {
   const chain = {}
-  const now = new Date()
+  const now = new Date(currentDate)
 
   expiryDates.forEach(expiry => {
     const expiryDate = new Date(expiry)
-    const T = Math.max(0.001, (expiryDate - now) / (365 * 24 * 60 * 60 * 1000))
+    const diffMs = expiryDate - now
+    const diffDays = Math.max(0, diffMs / (1000 * 60 * 60 * 24))
+    const T = diffDays / 365
+    const isExpired = diffDays <= 0
     
     // Generate strikes around current price (5% intervals)
     const strikeStep = S > 100 ? 5 : S > 50 ? 2.5 : 1

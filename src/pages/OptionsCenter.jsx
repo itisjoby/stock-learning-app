@@ -49,7 +49,7 @@ function EducationCard({ title, children, defaultOpen = false }) {
 }
 
 export default function OptionsCenter() {
-  const { stocks, selectedStock: storeSelected, setSelectedStock, buyOption, balance } = useStore()
+  const { stocks, selectedStock: storeSelected, setSelectedStock, buyOption, balance, currentDate } = useStore()
   const [symbol, setSymbol] = useState(storeSelected || 'AAPL')
   const [selectedExpiry, setSelectedExpiry] = useState(0)
   const [selectedOption, setSelectedOption] = useState(null)
@@ -61,7 +61,7 @@ export default function OptionsCenter() {
   const [scenarioPrice, setScenarioPrice] = useState('')
 
   const stock = stocks.find(s => s.symbol === symbol)
-  const expiryDates = useMemo(() => getExpiryDates(), [])
+  const expiryDates = useMemo(() => getExpiryDates(new Date()), [])
 
   useEffect(() => {
     if (storeSelected) setSymbol(storeSelected)
@@ -70,8 +70,8 @@ export default function OptionsCenter() {
   const chain = useMemo(() => {
     if (!stock) return {}
     const iv = ivOverride ?? stock.iv ?? 0.3
-    return generateOptionsChain(stock.currentPrice, iv, expiryDates)
-  }, [stock, expiryDates, ivOverride])
+    return generateOptionsChain(stock.currentPrice, iv, expiryDates, 0.05, currentDate)
+  }, [stock, expiryDates, ivOverride, currentDate])
 
   const currentChain = chain[expiryDates[selectedExpiry]] || []
   const S = stock?.currentPrice || 0
